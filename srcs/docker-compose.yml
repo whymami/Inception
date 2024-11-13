@@ -1,63 +1,42 @@
-version: '3'
-services:
+version: '3.8'
 
+services:
   nginx:
     container_name: nginx
-
-    build: ./requirements/nginx
-
+    build: requirements/nginx/.
     ports:
-      - 443:443
-    
+      - "443:443"
     volumes:
-      - wordpress_data:/var/www/html
-
-    restart: always
-
+      - /home/muguveli/data/wordpress_data:/var/www/html
+    restart: on-failure
     networks:
-      - network
-
-  mariadb:
-    container_name: mariadb
-    build: ./requirements/mariadb
-    volumes:
-      - mariadb_data:/var/lib/mysql
-    networks:
-      - network
-    restart: always
-
-    env_file:
-      - .env
+      inception:
 
   wordpress:
     container_name: wordpress
-    depends_on:
-      - mariadb
-    build:
-      context: ./requirements/wordpress
-      dockerfile: Dockerfile
-    restart: always
+    build: requirements/wordpress/.
+    volumes:
+      - /home/muguveli/data/wordpress_data:/var/www/html
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      inception:
+
+  mariadb:
+    container_name: mariadb
+    build: requirements/mariadb/.
     env_file:
       - .env
     volumes:
-      - wordpress_data:/var/www/html
+      - /home/muguveli/data/mariadb_data:/var/lib/mysql
+    restart: always
     networks:
-      - network
+      inception:
 
 volumes:
   mariadb_data:
     driver: local
-    driver_opts:
-      type: none
-      device: /home/data/mysql
-      o: bind
-  wordpress_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: /home/data/wordpress
-      o: bind
-
 networks:
-  network:
+  inception:
     driver: bridge
